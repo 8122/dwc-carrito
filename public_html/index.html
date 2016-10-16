@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Carrito</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            #productos div {
+                display: inline-block;
+                border: solid 1px;
+
+            }
+            #carrito div {
+                display: inline-block;
+                border: solid 1px;
+
+            }
+            #carrito div div {
+                display: block;
+            }
+            
+            div p {
+               vertical-align: bottom;
+            }
+
+            img {
+                width: 200px;
+                height: 200px;
+                padding: 5px;
+            }
+            #totalCarrito{
+                font-size: 1.5em;
+            }
+        </style>
+        <script>
+            var listaCarrito = ["vacio"];
+            var totalCarrito = 0;
+            
+            function vaciarCarrito(){
+                document.getElementById("carrito").innerHTML = null;
+                totalCarrito = 0;
+                /*Vaciamos el array del carrito*/
+                for(var i=1; i<listaCarrito.length;){
+                    listaCarrito.pop();
+                }
+                /*Ponemos el precio total del carrito a cero*/
+                var ps = document.getElementById("totalCarrito").getElementsByTagName("p");
+                ps[1].innerHTML = "Precio total: 0€";
+            }
+            
+            function anadirProducto(producto){
+                var elemento = document.getElementById(producto);
+                var productoAnanido = false;
+                for(var i=0; i<listaCarrito.length; i++){
+                    if(listaCarrito[i] === producto){
+                        productoAnanido = true;
+                    }
+                }
+                if(!productoAnanido){
+                    listaCarrito.push(producto);
+                    /* Copio el producto, le cambio el id, y lo inserto */
+                    var div = elemento.cloneNode(true);
+                    producto = producto+"Carrito";
+                    div.id = producto;
+                    /*quitamos el atributo onclick para evitar interferencias con 
+                     * los botones de "borrar" y "borrar todo". Para añadir solo
+                     * usremos los div de los productos.*/
+                    div.removeAttribute("onclick");
+                    document.getElementById("carrito").appendChild(div);
+                    /* Creo un parrafo para las unidades y lo inserto */
+                    var pUnidades = document.createElement("p");
+                    var textoUnidades = document.createTextNode("Unidades: 1");
+                    pUnidades.appendChild(textoUnidades);
+                    pUnidades.className = "unidades";
+                    document.getElementById(producto).appendChild(pUnidades);
+                    /* Creo otro parrafo para el precio total del producto y lo inserto */
+                    var pTotal = document.createElement("p");
+                    var pPrecio = document.getElementById(producto).getElementsByTagName("p");
+                    var textoPrecio = pPrecio[0].innerHTML;
+                    var precio = textoPrecio.split(":");
+                    var textoTotal = document.createTextNode("Total:"+precio[1]);
+                    pTotal.appendChild(textoTotal);
+                    pTotal.className = "total";
+                    document.getElementById(producto).appendChild(pTotal);
+                    /* Creo los botones de quitar una y quitar todas las unidades */
+                    var borrar = document.createElement("input");
+                    borrar.type = "button";
+                    borrar.value = "Borrar";
+                    borrar.setAttribute("onclick", "borrarUnidad(this)");
+                    document.getElementById(producto).appendChild(borrar);
+                    var borrarTodos = document.createElement("input");
+                    borrarTodos.type = "button";
+                    borrarTodos.value = "Borrar todos";
+                    borrarTodos.setAttribute("onclick", "borrarProducto(this)");
+                    document.getElementById(producto).appendChild(borrarTodos);
+                    /* Calculo del precio total del carrito*/
+                    calcularTotalCarrito(producto);
+                }else{
+                   /* En este caso solo añado una unidad del producto*/
+                    producto = producto+"Carrito";
+                    calcularTotalProducto(producto);
+                    /* Calculo del precio total del carrito*/
+                    calcularTotalCarrito(producto);
+                }
+            }
+            
+            function calcularTotalProducto(producto){
+                var ps = document.getElementById(producto).getElementsByTagName("p");
+                var texto = ps[1].innerHTML;
+                var trozos = texto.split(" ");
+                var unidades = parseInt(trozos[1]);
+                unidades++;
+                ps[1].innerHTML = "Unidades: "+unidades;
+                /* Calculo del precio total de dicho articulo*/
+                var precio = ps[0].innerHTML;
+                trozos = precio.split(" ");
+                var precioProducto = parseFloat(trozos[1]);
+                var precioTotal = (unidades*precioProducto).toFixed(2);
+                ps[2].innerHTML = "Total: "+precioTotal+"€";
+            }
+            
+            function calcularTotalCarrito(producto){
+                var ps = document.getElementById(producto).getElementsByTagName("p");
+                var cadena = ps[0].innerHTML;
+                var trozos = cadena.split(" ");
+                var precioProducto = parseFloat(trozos[1]);
+                totalCarrito += precioProducto;
+                ps = document.getElementById("totalCarrito").getElementsByTagName("p");
+                ps[1].innerHTML = "Precio total: "+totalCarrito.toFixed(2)+"€";
+            }
+            
+            /*Quita una unidad de un producto*/
+            function borrarUnidad(nodo){
+                /*Estraemos las unidades del producto para restar una*/  
+                var productoCarrito = nodo.parentNode;
+                var producto = productoCarrito.getAttribute("id");
+                var ps = productoCarrito.getElementsByTagName("p");
+                var cadena = ps[1].innerHTML;
+                var trozos = cadena.split(" ");
+                var unidades = parseInt(trozos[1]);
+                unidades--;
+                unidades--;
+                ps[1].innerHTML = "Unidades: "+unidades;
+                calcularTotalProducto(producto);
+                unidades++;
+                cadena = ps[0].innerHTML;
+                trozos = cadena.split(" ");
+                var precioProducto = parseFloat(trozos[1]);
+                totalCarrito -= precioProducto;
+                ps = document.getElementById("totalCarrito").getElementsByTagName("p");
+                ps[1].innerHTML = "Precio total: "+totalCarrito.toFixed(2)+"€";
+                if(unidades === 0){
+                    borrarProducto(nodo);
+                }
+                /*Borramos el producto del array listaCarrito*/
+                var idProducto = producto.substring(0,9);
+                var nuevaLista = [];
+                var productos = listaCarrito.length;
+                for(var i=0; i<productos;i++){
+                    if(listaCarrito[i] !== idProducto){
+                        nuevaLista.push(listaCarrito[i]);
+                    }
+                }
+                listaCarrito = nuevaLista;
+            }
+            
+            /*Quita el articulo compreto del carrito*/
+            function borrarProducto(nodo){
+                /*Extraemos el precio total del producto para borrarselo al carrito*/
+                var productoCarrito = nodo.parentNode;
+                var producto = productoCarrito.getAttribute("id");
+                var ps = productoCarrito.getElementsByTagName("p");
+                var cadena = ps[2].innerHTML;
+                var trozos = cadena.split(" ");
+                var precioTotalProducto = parseFloat(trozos[1]);
+                /*recalculamos el precio del carrito*/
+                totalCarrito = totalCarrito - precioTotalProducto;
+                ps = document.getElementById("totalCarrito").getElementsByTagName("p");
+                ps[1].innerHTML = "Precio total: "+totalCarrito.toFixed(2)+"€";
+                /*Borramos el div qeu contiene el producto*/
+                productoCarrito.parentNode.removeChild(productoCarrito);
+                /*Borramos el producto del array listaCarrito*/
+                var idProducto = producto.substring(0,9);
+                var nuevaLista = [];
+                var productos = listaCarrito.length;
+                for(var i=0; i<productos;i++){
+                    if(listaCarrito[i] !== idProducto){
+                        nuevaLista.push(listaCarrito[i]);
+                    }
+                }
+                listaCarrito = nuevaLista;
+            }
+
+           
+        </script>
+    </head>
+    <body>
+        <label><b>Productos </b></label><input type="button" value="Limpiar carrito" onclick="vaciarCarrito();"/>
+        <div id="productos">
+            <div id="producto1" onclick="anadirProducto('producto1');">
+                <h5>Portátil Hp 250 G4 P5t39es 15.6"</h5>
+                <a href="#" >
+                    <image src="images/image1.png"/>
+                </a>
+                <p>Precio: 205.70€</p>
+            </div>
+            
+            <div id="producto2" onclick="anadirProducto('producto2');">
+                <h5>Portátil HP Stream Notebook 13"</h5>
+                <a href="#" >
+                    <image src="images/image2.jpg" />
+                </a>
+                <p>Precio: 435.60€</p>
+            </div>
+            <div id="producto3" onclick="anadirProducto('producto3');">
+                <h5>Portátil lenovo ideapad ideapad 14"</h5>
+                <a href="#" >
+                    <image src="images/image3.jpg" />
+                </a>
+                <p>Precio: 265.78€</p>
+            </div>
+            <div id="producto4" onclick="anadirProducto('producto4');">
+                <h5>Portátil hp 15,6" Intel Celeron Azul</h5>
+                <a href="#" >
+                    <image src="images/image4.jpg" />
+                </a>
+                <p>Precio: 217.80€</p>
+            </div>
+        </div>
+        <div id="totalCarrito">
+            <p><b>Carrito</b></p>
+            <p>Precio total: 0€</p>
+        </div>
+        <div id="carrito">
+            
+        </div>
+    </body>
+</html>
